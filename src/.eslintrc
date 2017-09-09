@@ -3,5 +3,12 @@
 	"globals": {
 		"document": true
 	},
-	"root": true
+	"overrides": [
+		{
+			"files": ["**/*.test.js*"],
+			"globals": {
+				"it": true
+			}
+		}
+	]
 }
