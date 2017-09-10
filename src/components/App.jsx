@@ -1,15 +1,22 @@
 import React from 'react';
-import logo from '../logo.svg';
-import './App.css';
+
+import { AppBar, Toolbar, Typography } from 'material-ui';
+import { grey, deepOrange } from 'material-ui/colors';
+import { createMuiTheme, MuiThemeProvider } from 'material-ui/styles';
+
+const muiTheme = createMuiTheme({
+  palette: {
+    primary1Color: grey,
+    accent1Color: deepOrange,
+  },
+});
 
 export default () => (
-  <div className="App">
-    <div className="App-header">
-      <img src={logo} className="App-logo" alt="logo" />
-      <h2>Welcome to React</h2>
+  <MuiThemeProvider theme={muiTheme}>
+    <div id="actuario-app">
+      <AppBar position="static" color="default">
+        <Toolbar><Typography type="title" color="inherit">Actuario</Typography></Toolbar>
+      </AppBar>
     </div>
-    <p className="App-intro">
-      To get started, edit <code>src/App.jsx</code> and save to reload.
-    </p>
-  </div>
+  </MuiThemeProvider>
 );
