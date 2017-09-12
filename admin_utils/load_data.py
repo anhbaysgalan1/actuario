@@ -19,7 +19,7 @@ _item_descriptions = None
 _factorio_data = None
 
 # whether to actually send these to the database or just read them from disk
-_write_recipes, _write_entities, _write_icons = (True, True, False)
+_write_recipes, _write_entities, _write_icons = (False, True, False)
 
 firebase_cred = credentials.Certificate(config['firebase-key'])
 actuario_app = firebase_admin.initialize_app(firebase_cred, options={
@@ -238,34 +238,32 @@ def load_entities():
         power_raw = '0kW'
         fuel_efficiency = 1.
 
-        if entity_data['type'] == 'inserter':
-            if 'drain' in entity_data['energy_source']:
-                power_raw = entity_data['energy_source']['drain']
+        if entity_data['type'] == 'inserter' and 'drain' in entity_data['energy_source']:
+            power_raw = entity_data['energy_source']['drain']
         elif 'energy_usage' in entity_data:
             power_raw = entity_data['energy_usage']
 
-        if 'energy_source' in entity_data:
-            if entity_data['energy_source']['type'] == 'burner':
-                energy_type = entity_data['energy_source']['fuel_category']
-                fuel_efficiency = float(entity_data['energy_source']['effectivity'])
+        if 'energy_source' in entity_data and entity_data['energy_source']['type'] == 'burner':
+            energy_type = entity_data['energy_source']['fuel_category']
+            fuel_efficiency = float(entity_data['energy_source']['effectivity'])
 
         return {
             'type': energy_type,
-            'rate-kw': normalize_power_kw(power_raw),
-            'fuel-efficiency': fuel_efficiency
+            'kwPower': normalize_power_kw(power_raw),
+            'fuelEfficiency': fuel_efficiency
         }
 
     def base_entity(entity_data):
-        entity_name = entity_data['name']
-        entity_description = item_description(entity_name)
+        e_name = entity_data['name']
+        entity_description = item_description(e_name)
         if entity_description is None:
-            print('no description available for entity {}'.format(entity_name), file=sys.stderr)
+            print('no description available for entity {}'.format(e_name), file=sys.stderr)
 
         return entity['icon'], {
-            'name': entity_name,
+            'name': e_name,
             'description': entity_description,
-            'energy-usage': calculate_energy_usage(entity_data),
-            'module-slots': entity_data.get('module_specification', dict()).get('module_slots', 0)
+            'energyUsage': calculate_energy_usage(entity_data),
+            'moduleSlots': entity_data.get('module_specification', dict()).get('module_slots', 0)
         }
 
     db_entities = dict()
@@ -285,31 +283,35 @@ def load_entities():
 
             icons[entity_name] = icon_path
 
-            def copy_kebabed(*keys):
+            def copy_camel(*keys):
                 for key in keys:
-                    db_entity[inflection.dasherize(key)] = entity[key]
+                    db_entity[inflection.camelize(key)] = entity[key]
 
             if entity['type'] in ['assembling-machine', 'furnace', 'rocket-silo']:
                 db_path = 'crafters/{}'.format(entity_name)
-                copy_kebabed('crafting_categories', 'crafting_speed')
+                copy_camel('crafting_categories', 'crafting_speed')
 
             elif entity['type'] == 'inserter':
                 db_path = 'inserters/{}'.format(entity_name)
-                copy_kebabed('rotation_speed', 'extension_speed')
-                db_entity['energy-per-movement-kj'] = entity['energy_per_movement'] / 1.e3
-                db_entity['energy-per-rotation-kj'] = entity['energy_per_rotation'] / 1.e3
+                copy_camel('rotation_speed', 'extension_speed')
+                db_entity['kjPerMovement'] = entity['energy_per_movement'] / 1.e3
+                db_entity['kjPerRotation'] = entity['energy_per_rotation'] / 1.e3
 
             elif entity['type'] == 'transport-belt':
                 db_path = 'belts/{}'.format(entity_name)
-                copy_kebabed('speed')
+                copy_camel('speed')
 
             elif entity['type'] == 'mining-drill':
                 db_path = 'drills/{}'.format(entity_name)
-                copy_kebabed('mining_speed', 'mining_power')
+                copy_camel('mining_speed', 'mining_power')
 
             elif entity['type'] == 'lab':
-                db_path = 'goals/lab'
-                copy_kebabed('researching_speed', 'inputs')
+                db_path = 'lab'
+
+                db_entities['goals/science'] = {
+                    'sciencePacks': entity['inputs'],
+                    'researchSpeed': entity['researching_speed']
+                }
 
             else:
                 continue
@@ -324,7 +326,7 @@ def load_entities():
                                   if e is not None and e['name'] == 'rocket-silo')
 
         db_entities['goals/rocket'] = {
-            'rocket-parts-required': rocket_silo_entity['rocket_parts_required']
+            'rocketPartsRequired': rocket_silo_entity['rocket_parts_required']
         }
 
     except StopIteration:
