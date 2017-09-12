@@ -1,10 +1,18 @@
+/* eslint-disable react/jsx-filename-extension */
+
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import thunkMiddleware from 'redux-thunk';
 import firebase from 'firebase';
+import _ from 'lodash';
 
 import './index.css';
 
 import App from './components/App';
+import reducers from './reducers/app';
+
 import registerServiceWorker from './registerServiceWorker';
 
 // Initialize Firebase
@@ -17,7 +25,18 @@ firebase.initializeApp({
   messagingSenderId: '1037389045389',
 });
 
-// eslint-disable-next-line react/jsx-filename-extension
-ReactDOM.render(<App />, document.getElementById('root'));
+firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+if (_.isNil(firebase.auth().currentUser)) {
+  firebase.auth().signInAnonymously();
+}
+
+const store = createStore(combineReducers(reducers), applyMiddleware(thunkMiddleware));
+
+ReactDOM.render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById('root'));
 
 registerServiceWorker();

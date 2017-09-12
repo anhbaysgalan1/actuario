@@ -10,5 +10,6 @@
 				"it": true
 			}
 		}
-	]
+	],
+	"parser": "babel-eslint"
 }
