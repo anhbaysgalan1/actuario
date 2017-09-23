@@ -1,9 +1,10 @@
-import os, shutil, sys, json, tarfile, re, inflection, traceback
+import os, shutil, sys, json, tarfile, re, inflection, traceback, io, gzip
 from itertools import groupby
 import os.path as path
 
 import firebase_admin
-from firebase_admin import db, credentials
+from firebase_admin import storage, credentials
+from google.cloud.storage import Blob
 
 config = {
     'nt': {
@@ -19,7 +20,7 @@ _item_descriptions = None
 _factorio_data = None
 
 # whether to actually send these to the database or just read them from disk
-_write_recipes, _write_entities, _write_icons = (False, True, False)
+_write_data, _write_icons = (True, False)
 
 firebase_cred = credentials.Certificate(config['firebase-key'])
 actuario_app = firebase_admin.initialize_app(firebase_cred, options={
@@ -78,16 +79,14 @@ def item_description(item_name):
     if _item_descriptions is None:
         load_item_descriptions()
 
-    return _item_descriptions.get(item_name)
+    description = _item_descriptions.get(item_name)
+    if description is not None:
+        return inflection.titleize(description)
+
+    return None
 
 
-def db_root():
-    formatted_version = '_'.join(factorio_version().split('.'))
-    root_data_folder = 'factorio-data/v{}'.format(formatted_version)
-    return db.reference(root_data_folder, app=actuario_app)
-
-
-def load_data():
+def import_data():
     global _factorio_data
 
     factorio_datafile = 'data_{version}.tar.gz'.format(version=factorio_version())
@@ -104,12 +103,12 @@ def load_data():
 
 def data_segment(segment):
     if _factorio_data is None:
-        load_data()
+        import_data()
 
     return _factorio_data[segment]
 
 
-def load_recipes():
+def parse_recipes():
 
     items = data_segment('item')
     recipes = data_segment('recipe')
@@ -175,8 +174,6 @@ def load_recipes():
             if db_icon_path != '{}.png'.format(recipe_name):
                 print('weird icon filename {} for recipe {}'.format(db_icon_path, recipe_name))
 
-            db_path = 'recipes/{}'.format(recipe_name)
-
             r_spec = get_normal_spec(recipe)
             normalized_results, avg_cycles = normalize_results(r_spec)
             normalized_effort = r_spec.get('energy_required', 0.5) * (avg_cycles if avg_cycles is not None else 1)
@@ -185,7 +182,7 @@ def load_recipes():
             if recipe_description is None:
                 print('no description available for recipe {}'.format(recipe_name), file=sys.stderr)
 
-            db_recipes[db_path] = {
+            db_recipes[recipe_name] = {
                 'name': recipe_name,
                 'description': recipe_description,
                 'category': recipe.get('category', 'crafting'),
@@ -197,20 +194,11 @@ def load_recipes():
             print('failed to process recipe {}'.format(recipe_name), file=sys.stderr)
             traceback.print_exc()
 
-    if _write_recipes:
-        try:
-            for db_path, recipe in db_recipes.items():
-                db_root().child(db_path).set(recipe)
-        except:
-            print('error while loading recipes into db', file=sys.stderr)
-            traceback.print_exc()
-            sys.exit(2)
-
     print('loaded {:d} recipes'.format(len(db_recipes)))
-    return icons
+    return db_recipes, icons
 
 
-def load_entities():
+def parse_entities():
 
     entities = data_segment('entity')
 
@@ -266,7 +254,7 @@ def load_entities():
             'moduleSlots': entity_data.get('module_specification', dict()).get('module_slots', 0)
         }
 
-    db_entities = dict()
+    db_entities = {cat: dict() for cat in ['crafters', 'inserters', 'belts', 'drills', 'lab', 'goals']}
     icons = dict()
 
     for entity in entities:
@@ -285,38 +273,38 @@ def load_entities():
 
             def copy_camel(*keys):
                 for key in keys:
-                    db_entity[inflection.camelize(key)] = entity[key]
+                    db_entity[inflection.camelize(key, uppercase_first_letter=False)] = entity[key]
 
             if entity['type'] in ['assembling-machine', 'furnace', 'rocket-silo']:
-                db_path = 'crafters/{}'.format(entity_name)
+                db_category = 'crafters'
                 copy_camel('crafting_categories', 'crafting_speed')
 
             elif entity['type'] == 'inserter':
-                db_path = 'inserters/{}'.format(entity_name)
+                db_category = 'inserters'
                 copy_camel('rotation_speed', 'extension_speed')
                 db_entity['kjPerMovement'] = entity['energy_per_movement'] / 1.e3
                 db_entity['kjPerRotation'] = entity['energy_per_rotation'] / 1.e3
 
             elif entity['type'] == 'transport-belt':
-                db_path = 'belts/{}'.format(entity_name)
+                db_category = 'belts'
                 copy_camel('speed')
 
             elif entity['type'] == 'mining-drill':
-                db_path = 'drills/{}'.format(entity_name)
+                db_category = 'drills'
                 copy_camel('mining_speed', 'mining_power')
 
             elif entity['type'] == 'lab':
-                db_path = 'lab'
+                db_category = 'lab'
+                db_entity['researchSpeed'] = entity['researching_speed']
 
-                db_entities['goals/science'] = {
-                    'sciencePacks': entity['inputs'],
-                    'researchSpeed': entity['researching_speed']
+                db_entities['goals']['science'] = {
+                    'sciencePacks': entity['inputs']
                 }
 
             else:
                 continue
 
-            db_entities[db_path] = db_entity
+            db_entities[db_category][entity_name] = db_entity
         except:
             print('error while processing entity: {}'.format(json.dumps(entity)), file=sys.stderr)
             traceback.print_exc()
@@ -325,7 +313,7 @@ def load_entities():
         rocket_silo_entity = next(e for e in entities
                                   if e is not None and e['name'] == 'rocket-silo')
 
-        db_entities['goals/rocket'] = {
+        db_entities['goals']['rocket'] = {
             'rocketPartsRequired': rocket_silo_entity['rocket_parts_required']
         }
 
@@ -335,20 +323,10 @@ def load_entities():
         print('error while processing rocket goal', file=sys.stderr)
         traceback.print_exc()
 
-    if _write_entities:
-        try:
-            for db_path, entity in db_entities.items():
-                db_root().child(db_path).set(entity)
-        except:
-            print('error loading entities into db', file=sys.stderr)
-            traceback.print_exc()
-            sys.exit(2)
+    print('loaded {:d} entities:'.format(sum([len(v) for v in db_entities.values()])))
+    print(json.dumps({k: len(v) for k, v in db_entities.items()}, indent=2))
 
-    print('loaded {:d} entities:'.format(len(db_entities)))
-    print(json.dumps({k: len(list(g))
-                      for k, g in groupby(sorted(db_entities.keys()), lambda ep: path.dirname(ep))}, indent=2))
-
-    return icons
+    return db_entities, icons
 
 
 def get_fluid_icons():
@@ -357,9 +335,6 @@ def get_fluid_icons():
 
 
 def copy_icons(paths):
-    if not _write_icons:
-        return
-
     factorio_base_path = path.join(config['factorio-path'], 'data/base')
     actuario_icon_path = '../src/icons'
     if path.exists(actuario_icon_path) and not path.isdir(actuario_icon_path):
@@ -382,9 +357,24 @@ def copy_icons(paths):
         shutil.copyfile(local_path, dest_filename)
 
 
-if __name__ == '__main__':
-    icon_paths = load_recipes()
-    icon_paths.update(load_entities())
-    icon_paths.update(get_fluid_icons())
+def upload_data(data):
+    formatted_version = '_'.join(factorio_version().split('.'))
+    storage_filename = 'factorio-data/v{}.json.gz'.format(formatted_version)
 
-    copy_icons(icon_paths)
+    data_blob = Blob(storage_filename, storage.bucket(app=actuario_app))
+
+    data_gz_bytes = gzip.compress(json.dumps(data).encode())
+    with io.BytesIO(data_gz_bytes) as data_stream:
+        data_blob.upload_from_file(data_stream, content_type='application/json')
+
+
+if __name__ == '__main__':
+    recipes, recipe_icons = parse_recipes()
+    entities, entity_icons = parse_entities()
+
+    if _write_data:
+        upload_data(dict(recipes=recipes, **entities))
+
+    if _write_icons:
+        all_icons = dict(**recipe_icons, **entity_icons)
+        copy_icons(all_icons)
