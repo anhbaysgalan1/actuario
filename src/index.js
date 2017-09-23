@@ -3,17 +3,20 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
 import thunkMiddleware from 'redux-thunk';
 import firebase from 'firebase';
-import _ from 'lodash';
 
 import './index.css';
+import defaults from './data/defaults';
 
 import App from './components/App';
-import reducers from './reducers/app';
+import reducers from './reducers/actuario';
+import { fetchData } from './actions/data';
 
 import registerServiceWorker from './registerServiceWorker';
+
+const store = createStore(reducers, applyMiddleware(thunkMiddleware));
 
 // Initialize Firebase
 firebase.initializeApp({
@@ -25,18 +28,16 @@ firebase.initializeApp({
   messagingSenderId: '1037389045389',
 });
 
-firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
-if (_.isNil(firebase.auth().currentUser)) {
-  firebase.auth().signInAnonymously();
-}
-
-const store = createStore(combineReducers(reducers), applyMiddleware(thunkMiddleware));
+firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+firebase.auth().onAuthStateChanged((user) => {
+  if (user)
+    store.dispatch(fetchData(defaults.versionKey));
+  else
+    firebase.auth().signInAnonymously();
+});
 
 ReactDOM.render(
-  <Provider store={store}>
-    <App />
-  </Provider>,
+  <Provider store={store}><App /></Provider>,
   document.getElementById('root'));
 
 registerServiceWorker();
