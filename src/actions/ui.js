@@ -1,10 +1,7 @@
 import { createAction } from 'redux-act';
 
-export default {
-  FactoryView: {
-    Overall: 'overall',
-    Outposts: 'outposts',
-  },
+export const FactoryView = { Overall: 'overall', Outposts: 'outposts' };
 
-  setFactoryView: createAction('set factory view'),
-};
+export const setFactoryView = createAction('set factory view');
+
+export const setUiWidth = createAction('set ui width');

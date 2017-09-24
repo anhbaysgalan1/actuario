@@ -6,13 +6,18 @@ import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
 import thunkMiddleware from 'redux-thunk';
 import firebase from 'firebase';
+import _ from 'lodash';
+
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 
 import './index.css';
 import defaults from './data/defaults';
 
-import App from './components/App';
+import AppContainer from './containers/AppContainer';
 import reducers from './reducers/actuario';
 import { fetchData } from './actions/data';
+import { setUiWidth } from './actions/ui';
 
 import registerServiceWorker from './registerServiceWorker';
 
@@ -36,8 +41,12 @@ firebase.auth().onAuthStateChanged((user) => {
     firebase.auth().signInAnonymously();
 });
 
+window.addEventListener('resize',
+  _.throttle(e => store.dispatch(setUiWidth(e.target.innerWidth)),
+    500, { leading: true, trailing: true }));
+
 ReactDOM.render(
-  <Provider store={store}><App /></Provider>,
+  <Provider store={store}><AppContainer /></Provider>,
   document.getElementById('root'));
 
 registerServiceWorker();
