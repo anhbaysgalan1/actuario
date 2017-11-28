@@ -20,7 +20,7 @@ _item_descriptions = None
 _factorio_data = None
 
 # whether to actually send these to the database or just read them from disk
-_write_data, _write_icons = (True, False)
+_write_data, _write_icons = (False, True)
 
 firebase_cred = credentials.Certificate(config['firebase-key'])
 actuario_app = firebase_admin.initialize_app(firebase_cred, options={
@@ -368,6 +368,11 @@ def upload_data(data):
         data_blob.upload_from_file(data_stream, content_type='application/json')
 
 
+fallback_icons = {
+    'space-science-pack': '__base__/graphics/icons/space-science-pack.png'
+}
+
+
 if __name__ == '__main__':
     recipes, recipe_icons = parse_recipes()
     entities, entity_icons = parse_entities()
@@ -376,5 +381,7 @@ if __name__ == '__main__':
         upload_data(dict(recipes=recipes, **entities))
 
     if _write_icons:
-        all_icons = dict(**recipe_icons, **entity_icons)
+        missing_icons = {k: v for k, v in entity_icons.items() if k not in recipe_icons}
+
+        all_icons = dict(**recipe_icons, **missing_icons, **fallback_icons)
         copy_icons(all_icons)
