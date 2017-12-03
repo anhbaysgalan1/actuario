@@ -1,19 +1,23 @@
 import { createAction } from 'redux-act';
-import { GoalsState } from '../../types/state';
+import { Goals } from '../../types/state';
 
-export interface RecipeRate {
+export interface RecipeCrafter {
   readonly recipe: string;
-  readonly rate: number;
+  readonly crafter: string;
+}
+
+export interface RecipeModule {
+  readonly recipe: string;
+  readonly module: string;
 }
 
 export default {
-  toggleGoal: createAction<keyof GoalsState>('enable or disable a goal'),
+  toggleGoal: createAction<keyof Goals>('enable or disable a goal'),
 
-  setSciencePackRate: createAction<number>('set the desired science pack production rate'),
-  toggleSciencePackEnabled: createAction<string>('enable or disable a particular science pack'),
+  setSciencePacks: createAction<[string]>('specify which science packs are available for this factory'),
 
-  setRocketRate: createAction<number>('set the desired rate of rocket launches'),
-
-  setRecipeRate: createAction<RecipeRate>('set the desired production rate for a particular recipe'),
-  removeRecipeGoal: createAction<string>('remove a particular recipe from the desired production schedule'),
+  addCrafter: createAction<RecipeCrafter>('add a crafter for a recipe'),
+  removeCrafter: createAction<RecipeCrafter>('remove a crafter from a recipe'),
+  addModule: createAction<RecipeModule>('add a module for producing this recipe'),
+  removeModule: createAction<RecipeModule>('remove a module from production of this recipe')
 };

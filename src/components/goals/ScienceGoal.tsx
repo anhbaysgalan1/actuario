@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { Switch, TextField } from 'material-ui';
+import { Switch } from 'material-ui';
 import Card, { CardHeader, CardContent } from 'material-ui/Card';
 import { FormControlLabel } from 'material-ui/Form';
 import { withStyles, StyleRules } from 'material-ui/styles';
@@ -8,7 +8,8 @@ import { withStyles, StyleRules } from 'material-ui/styles';
 import ItemIcon from '../ItemIcon';
 import { WithStyles } from 'material-ui/styles/withStyles';
 import { Action } from 'redux-act';
-import { GoalsState } from '../../types/state';
+import { Goals, ProductionManifest } from '../../types/state';
+import { RecipeCrafter, RecipeModule } from '../../actions/user/goals';
 
 const styles: StyleRules = {
   title: {
@@ -37,8 +38,8 @@ const styles: StyleRules = {
 };
 
 const ScienceGoal: React.SFC<ScienceGoalProps & WithStyles> = ({ classes, ...moreProps }) => {
-  const { enabled, packsPerMin, enabledPacks, sciencePacks } = moreProps;
-  const { toggleGoal, setPackRate, togglePackEnabled } = moreProps;
+  const { enabled, /* sciencePacks, */ packDescriptions } = moreProps;
+  const { toggleGoal, /* addCrafter, subtractCrafter, addModule, subtractModule */ } = moreProps;
 
   const enabledSwitch = <Switch checked={enabled} onChange={() => toggleGoal()} />;
 
@@ -50,13 +51,10 @@ const ScienceGoal: React.SFC<ScienceGoalProps & WithStyles> = ({ classes, ...mor
   );
 
   const packSwitches = _.map(
-    sciencePacks,
+    packDescriptions,
     (packDescription, packName) => (
       <FormControlLabel
-        control={<Switch
-          checked={_.includes(enabledPacks, packName)}
-          onChange={() => togglePackEnabled(packName)}
-        />}
+        control={<Switch checked={false} />}
         label={<ItemIcon name={packName} description={packDescription} />}
         key={packName}
       />
@@ -66,13 +64,6 @@ const ScienceGoal: React.SFC<ScienceGoalProps & WithStyles> = ({ classes, ...mor
     <Card>
       <CardHeader title={cardTitle} />
       <CardContent className={enabled ? classes.enabledContents : classes.disabledContents}>
-        <TextField
-          disabled={!enabled}
-          id="science-pack-rate"
-          label="Pack Production Rate"
-          value={packsPerMin}
-          onChange={e => setPackRate(parseFloat(e.target.value))}
-        />
         <div className={classes.packSwitchContainer}>{packSwitches}</div>
       </CardContent>
     </Card>
@@ -81,12 +72,13 @@ const ScienceGoal: React.SFC<ScienceGoalProps & WithStyles> = ({ classes, ...mor
 
 interface ScienceGoalProps {
   readonly enabled: boolean;
-  readonly packsPerMin: number;
-  readonly enabledPacks: string[];
-  readonly sciencePacks: { [name: string]: string };
-  readonly toggleGoal: () => Action<keyof GoalsState>;
-  readonly setPackRate: (rate: number) => Action<number>;
-  readonly togglePackEnabled: (packName: string) => Action<string>;
+  readonly sciencePacks: ProductionManifest;
+  readonly packDescriptions: { [name: string]: string };
+  readonly toggleGoal: () => Action<keyof Goals>;
+  readonly addCrafter: (packName: string, crafterName: string) => Action<RecipeCrafter>;
+  readonly subtractCrafter: (packName: string, crafterName: string) => Action<RecipeCrafter>;
+  readonly addModule: (packName: string, moduleName: string) => Action<RecipeModule>;
+  readonly subtractModule: (packName: string, moduleName: string) => Action<RecipeModule>;
 }
 
 export default withStyles(styles)(ScienceGoal);

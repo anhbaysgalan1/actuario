@@ -11,24 +11,26 @@ const fallbackDescriptions: { [name: string]: string } = {
 
 const mapStateToProps = (state: ActuarioState) => {
   const scienceGoals = state.user.factory.goals.science;
-  const sciencePacks: string[] = _.get(state, 'data.factorio.goals.science.sciencePacks');
+  const packNames = _.keys(scienceGoals.sciencePacks);
 
   const getDescription: (packName: string) => string = packName =>
     _.get(state, `factorio.recipes.${packName}.description`)
     || fallbackDescriptions[packName];
 
-  const packDescriptions: { [packName: string]: string } = _(sciencePacks || [])
+  const packDescriptions: { [packName: string]: string } = _(packNames || [])
     .map(packName => [packName, getDescription(packName)])
     .fromPairs()
     .value();
 
-  return { ...scienceGoals, sciencePacks: packDescriptions };
+  return { ...scienceGoals, packDescriptions };
 };
 
 const mapDispatchToProps = (dispatch: Dispatch<ActuarioState>) => ({
   toggleGoal: () => dispatch(GoalActions.toggleGoal('science')),
-  setPackRate: (newRate: number) => dispatch(GoalActions.setSciencePackRate(newRate)),
-  togglePackEnabled: (packName: string) => dispatch(GoalActions.toggleSciencePackEnabled(packName)),
+  addCrafter: (recipe: string, crafter: string) => dispatch(GoalActions.addCrafter({ recipe, crafter })),
+  subtractCrafter: (recipe: string, crafter: string) => dispatch(GoalActions.removeCrafter({ recipe, crafter })),
+  addModule: (recipe: string, module: string) => dispatch(GoalActions.addModule({ recipe, module })),
+  subtractModule: (recipe: string, module: string) => dispatch(GoalActions.removeModule({ recipe, module }))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ScienceGoal);

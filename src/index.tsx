@@ -10,9 +10,6 @@ import { createMuiTheme, MuiThemeProvider } from 'material-ui/styles';
 
 import * as _ from 'lodash';
 
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
-
 import './index.css';
 import { defaultPrefs } from './reducers/user/prefs';
 

@@ -6,9 +6,10 @@ import * as request from 'request-promise';
 import { RequestError } from 'request-promise/errors';
 
 import { ActuarioState } from '../types/state';
+import { FactorioData } from '../types/factorio';
 
 export const waitingForData = createAction('waiting for data to load...');
-export const receiveData = createAction<string>('receive data from firebase storage');
+export const receiveData = createAction<FactorioData>('receive data from firebase storage');
 export const failedDataFetch =
   createAction<FirebaseError | RequestError>('there was a problem receiving the data from storage');
 
@@ -21,6 +22,7 @@ export function fetchData(versionKey: string) {
       .getDownloadURL()
       .then(request.get)
       .catch((error: FirebaseError | RequestError) => dispatch(failedDataFetch(error)))
-      .then((data: string) => dispatch(receiveData(data)));
+      .then(data => JSON.parse(data))
+      .then((data: FactorioData) => dispatch(receiveData(data)));
   };
 }

@@ -10,10 +10,8 @@ function handleWaitingForData(): DataState {
   return { fetchingData: true };
 }
 
-function handleRecieveData(state: DataState, jsonData: string): DataState {
-  const data: FactorioData = JSON.parse(jsonData);
-
-  return { factorio: data, fetchingData: false };
+function handleRecieveData(state: DataState, factorio: FactorioData): DataState {
+  return { factorio, fetchingData: false };
 }
 
 function handleFailedDataFetch(state: DataState, dataFetchError: FirebaseError | RequestError): DataState {

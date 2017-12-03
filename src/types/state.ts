@@ -35,36 +35,44 @@ export interface UiState {
 
 export interface UserState {
   readonly prefs: UserPreferences;
-  readonly factory: FactoryState;
+  readonly factory: Factory;
 }
 
 export interface UserPreferences {
   readonly versionKey: string;
 }
 
-export interface FactoryState {
-  readonly goals: GoalsState;
+export interface Factory {
+  readonly goals: Goals;
 }
 
-export interface GoalsState {
-  readonly science: ScienceGoalState;
-  readonly rocket: RocketGoalState;
-  readonly custom: CustomGoalState;
+export interface Goals {
+  readonly science: ScienceGoal;
+  readonly rocket: RocketGoal;
+  readonly custom: CustomGoal;
 }
 
-export interface GoalState {
+export interface ProductionGoal {
   readonly enabled: boolean;
 }
 
-export interface ScienceGoalState extends GoalState {
-  readonly packsPerMin: number;
-  readonly enabledPacks: string[];
+export type ProductionOption = { [name: string]: number };
+
+export interface ProductionOptions {
+  crafters: ProductionOption;
+  modules: ProductionOption;
 }
 
-export interface RocketGoalState extends GoalState {
-  readonly rocketsPerHour: number;
+export type ProductionManifest = { [name: string]: ProductionOptions };
+
+export interface ScienceGoal extends ProductionGoal {
+  readonly sciencePacks: ProductionManifest;
 }
 
-export interface CustomGoalState extends GoalState {
-  readonly recipeRates: { [name: string]: number };
+export interface RocketGoal extends ProductionGoal {
+  readonly production: ProductionOptions;
+}
+
+export interface CustomGoal extends ProductionGoal {
+  readonly recipes: ProductionManifest;
 }

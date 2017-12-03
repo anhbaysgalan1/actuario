@@ -1,30 +1,31 @@
 import { createReducer } from 'redux-act';
 import * as _ from 'lodash';
+import * as _fp from 'lodash/fp';
 
-import goalActions, { RecipeRate } from '../../../actions/user/goals';
-import { GoalsState } from '../../../types/state';
+import goalActions, { RecipeCrafter, RecipeModule } from '../../../actions/user/goals';
+import { Goals, ProductionManifest, ProductionOptions, ProductionOption } from '../../../types/state';
+import { FactorioData } from '../../../types/factorio';
+import { receiveData } from '../../../actions/data';
 
-const defaultGoals: GoalsState = {
+const defaultGoals: Goals = {
   science: {
-    enabled: true,
-    packsPerMin: 16,
-    enabledPacks: [
-      'science-pack-1',
-      'science-pack-2',
-      'science-pack-3',
-    ],
+    enabled: false,
+    sciencePacks: {}
   },
   rocket: {
     enabled: false,
-    rocketsPerHour: 6,
+    production: {
+      crafters: {},
+      modules: {}
+    }
   },
   custom: {
     enabled: false,
-    recipeRates: {},
+    recipes: {},
   },
 };
 
-function handleToggleGoal(state: GoalsState, goal: keyof GoalsState): GoalsState {
+function handleToggleGoal(state: Goals, goal: keyof Goals): Goals {
 
   const newGoal = { ...state[goal], enabled: !state[goal].enabled };
   const newState = { ...state };
@@ -33,41 +34,76 @@ function handleToggleGoal(state: GoalsState, goal: keyof GoalsState): GoalsState
   return newState;
 }
 
-function handleSetSciencePackRate(state: GoalsState, packsPerMin: number): GoalsState {
-  return { ...state, science: { ...state.science, packsPerMin } };
+function handleReceiveData(state: Goals, data: FactorioData): Goals {
+
+  const packProduction: ProductionManifest = _(data.goals.science.sciencePacks)
+    .map(pack => [pack, { crafters: {}, modules: {} }])
+    .fromPairs()
+    .value();
+
+  return { ...state, science: { ...state.science, sciencePacks: packProduction } };
 }
 
-function handleToggleSciencePackEnabled(state: GoalsState, packName: string): GoalsState {
+function addOrCreate(option: ProductionOption, name: string): ProductionOption {
 
-  const enabledPacks = state.science.enabledPacks;
-  if (_.includes(enabledPacks, packName))
-    _.pull(enabledPacks, packName);
-  else
-    enabledPacks.push(packName);
+  if (_.has(option, name))
+    return { ...option, name: option[name] + 1 };
 
-  return { ...state, science: { ...state.science, enabledPacks } };
+  return { ...option, name: 1 };
 }
 
-function handleSetRocketRate(state: GoalsState, rocketsPerHour: number): GoalsState {
-  return { ...state, rocket: { ...state.rocket, rocketsPerHour } };
+function subtractOrRemove(option: ProductionOption, name: string): ProductionOption {
+
+  if (!_.has(option, name))
+    return option;
+
+  if (option[name] === 1)
+    return _.omit(option, [name]);
+
+  return { ...option, name: option[name] - 1 };
 }
 
-function handleSetRecipeRate(state: GoalsState, { recipe, rate }: RecipeRate): GoalsState {
-  const recipeRates = state.custom.recipeRates;
-  recipeRates[recipe] = rate;
+function handleUpdateProduction(state: Goals,
+                                rp: RecipeCrafter | RecipeModule,
+                                f: ((o: ProductionOption, n: string) => ProductionOption)) {
 
-  return { ...state, custom: { ...state.custom, recipeRates } };
+  const { recipe } = rp;
+  
+  let optionKey: keyof ProductionOptions;
+  let target: string;
+  if ((<RecipeCrafter> rp).crafter) {
+    optionKey = 'crafters';
+    target = (<RecipeCrafter> rp).crafter;
+  } else {
+    optionKey = 'modules';
+    target = (<RecipeModule> rp).module;
+  }
+                                  
+  if (_.has(state.science.sciencePacks, recipe)) {
+    const newScienceOpt = f(state.science.sciencePacks[recipe][optionKey], target);
+    return _fp.set(state, `science.sciencePacks.${recipe}.${optionKey}`, newScienceOpt);
+  }
+
+  if (recipe === 'rocket-part') {
+    const newRocketOpt = f(state.rocket.production[optionKey], target);
+    return _fp.set(state, `rocket.production.${optionKey}`, newRocketOpt);
+  }
+
+  if (_.has(state.custom.recipes, recipe)) {
+    const newRecipeOpt = f(state.custom.recipes[recipe][optionKey], target);
+    return _fp.set(state, `custom.recipes.${recipe}.${optionKey}`, newRecipeOpt);
+  }
+
+  const newProduction = { crafters: {}, modules: {} };
+  newProduction[optionKey][target] = 1;
+  return _fp.set(state, `custom.recipes.${recipe}`, newProduction);
+  
 }
 
-function handleRemoveRecipeGoal(state: GoalsState, recipe: string): GoalsState {
-  const recipeRates = _.omit(state.custom.recipeRates, [recipe]);
-  return { ...state, custom: { ...state.custom, recipeRates } };
-}
-
-export default createReducer<GoalsState>({}, defaultGoals)
+export default createReducer<Goals>({}, defaultGoals)
   .on(goalActions.toggleGoal, handleToggleGoal)
-  .on(goalActions.setSciencePackRate, handleSetSciencePackRate)
-  .on(goalActions.toggleSciencePackEnabled, handleToggleSciencePackEnabled)
-  .on(goalActions.setRocketRate, handleSetRocketRate)
-  .on(goalActions.setRecipeRate, handleSetRecipeRate)
-  .on(goalActions.removeRecipeGoal, handleRemoveRecipeGoal);
+  .on(receiveData, handleReceiveData)
+  .on(goalActions.addCrafter, (state, rc) => handleUpdateProduction(state, rc, addOrCreate))
+  .on(goalActions.removeCrafter, (state, rc) => handleUpdateProduction(state, rc, subtractOrRemove))
+  .on(goalActions.addModule, (state, rm) => handleUpdateProduction(state, rm, addOrCreate))
+  .on(goalActions.removeModule, (state, rm) => handleUpdateProduction(state, rm, subtractOrRemove));
