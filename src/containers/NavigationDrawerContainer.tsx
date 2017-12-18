@@ -1,6 +1,7 @@
 import { connect, Dispatch } from 'react-redux';
-import NavigationDrawer from '../components/NavigationDrawer';
+
 import { setUiViewState, toggleNavDrawer } from '../actions/ui';
+import NavigationDrawer from '../components/NavigationDrawer';
 import { ActuarioState, UiViewState } from '../types/state';
 
 const mapStateToProps = (state: ActuarioState) => ({

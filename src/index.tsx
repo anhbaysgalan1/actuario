@@ -1,22 +1,22 @@
+import * as firebase from 'firebase';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux';
+import { applyMiddleware, createStore } from 'redux';
 import thunkMiddleware from 'redux-thunk';
-import * as firebase from 'firebase';
 
-import { grey, deepOrange } from 'material-ui/colors';
+import { deepOrange, grey } from 'material-ui/colors';
 import { createMuiTheme, MuiThemeProvider } from 'material-ui/styles';
 
 import * as _ from 'lodash';
 
 import './index.css';
-import { defaultPrefs } from './reducers/user/prefs';
+import { defaultPrefs } from './reducers/prefs';
 
-import AppContainer from './containers/AppContainer';
-import reducers from './reducers/actuario';
 import { fetchData } from './actions/data';
 import { changeUiWidth } from './actions/ui';
+import AppContainer from './containers/AppContainer';
+import reducers from './reducers/actuario';
 
 import registerServiceWorker from './registerServiceWorker';
 

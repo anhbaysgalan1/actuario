@@ -1,8 +1,10 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import App from './App';
-import { UiViewState } from '../types/state';
 import { Action } from 'redux-act';
+
+import { UiViewState } from '../types/state';
+
+import App from './App';
 
 const mockShowNavDrawer: () => Action<boolean> = () => ({
   type: 'show_nav_drawer',

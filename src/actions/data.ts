@@ -5,8 +5,8 @@ import { createAction } from 'redux-act';
 import * as request from 'request-promise';
 import { RequestError } from 'request-promise/errors';
 
-import { ActuarioState } from '../types/state';
 import { FactorioData } from '../types/factorio';
+import { ActuarioState } from '../types/state';
 
 export const waitingForData = createAction('waiting for data to load...');
 export const receiveData = createAction<FactorioData>('receive data from firebase storage');

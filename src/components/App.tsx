@@ -1,14 +1,13 @@
-import * as React from 'react';
-
-import { AppBar, Toolbar, IconButton, Typography } from 'material-ui';
+import { AppBar, IconButton, Toolbar, Typography } from 'material-ui';
 import Menu from 'material-ui-icons/Menu';
-import { withStyles, StyleRules } from 'material-ui/styles';
+import { StyleRules, withStyles } from 'material-ui/styles';
+import { WithStyles } from 'material-ui/styles/withStyles';
+import * as React from 'react';
+import { Action } from 'redux-act';
 
 import NavigationDrawerContainer from '../containers/NavigationDrawerContainer';
-import ScienceGoalContainer from '../containers/goals/ScienceGoalContainer';
+import ScienceGoalContainer from '../containers/ScienceGoalContainer';
 import { UiViewState } from '../types/state';
-import { WithStyles } from 'material-ui/styles/withStyles';
-import { Action } from 'redux-act';
 
 const styles: StyleRules = {
   appContainer: {
@@ -35,8 +34,7 @@ const styles: StyleRules = {
     },
   },
   content: {
-    flex: 1,
-    border: '1px dotted black',
+    flex: 1
   },
   menuButton: {
     marginLeft: -12,

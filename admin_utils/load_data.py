@@ -12,7 +12,8 @@ config = {
         'firebase-key': r'E:\actuario-564a6-firebase-adminsdk-rtaqt-697820f9cc.json'
     },
     'posix': {
-        'factorio-path': '/media/willj/seagate/Steam Library - Linux/steamapps/common/Factorio',
+        'factorio-path': '/media/seagate/Steam Library - Linux/steamapps/common/Factorio',
+        'firebase-key': r'/media/willj/1C3A-74F5/actuario-564a6-firebase-adminsdk-rtaqt-697820f9cc.json'
     }
 }[os.name]
 _factorio_version = None
@@ -20,7 +21,7 @@ _item_descriptions = None
 _factorio_data = None
 
 # whether to actually send these to the database or just read them from disk
-_write_data, _write_icons = (False, True)
+_write_data, _write_icons = (True, False)
 
 firebase_cred = credentials.Certificate(config['firebase-key'])
 actuario_app = firebase_admin.initialize_app(firebase_cred, options={
@@ -59,7 +60,7 @@ def load_item_descriptions():
             for line in locale_cfg:
                 section_header_match = section_header_re.match(line.strip())
                 if section_header_match:
-                    _current_section = section_header_match[1]
+                    _current_section = section_header_match.group(1)
 
                     if _current_section in relevant_sections:
                         current_section = _current_section
@@ -98,7 +99,7 @@ def import_data():
     _factorio_data = dict()
     with tarfile.open(factorio_datafile) as data_tar:
         for member in data_tar.getmembers():
-            _factorio_data[path.splitext(member.name)[0]] = json.load(data_tar.extractfile(member.name))
+            _factorio_data[path.splitext(member.name)[0]] = json.loads(data_tar.extractfile(member.name).read().decode('utf-8'))
 
 
 def data_segment(segment):
@@ -121,12 +122,12 @@ def parse_recipes():
         else: return tuple(i)
 
     def normalize_results(raw_recipe):
-        """
+        '''
         Turns a recipe with one of several possible result formats into a dictionary from result name to result count.
         :param raw_recipe: the recipe
         :return: (results, avg_t), where results is a dict[string, int], and avg_t is the number of cycles that
                  must be averaged over to produce the given results, or None if the recipe is not probabilistic.
-        """
+        '''
         if 'results' in raw_recipe:
             results = raw_recipe['results']
 
@@ -211,8 +212,8 @@ def parse_entities():
         elif type(power) is str:
             match = power_re.match(power)
             if match:
-                unit = (match[2] or 'W').lower()
-                return float(match[1]) * power_conversion_kw[unit]
+                unit = (match.group(2) or 'W').lower()
+                return float(match.group(1)) * power_conversion_kw[unit]
             else:
                 print('cannot read power rate: {}'.format(power), file=sys.stderr)
         else:
@@ -328,6 +329,80 @@ def parse_entities():
 
     return db_entities, icons
 
+def parse_modules():
+
+    missing_bonuses = {
+        'effectivity-module': { 'consumption': -0.3 },
+        'effectivity-module-2': { 'consumption': -0.4 },
+        'effectivity-module-3': { 'consumption': -0.5 },
+        'productivity-module': { 'speed': -0.15 },
+        'productivity-module-2': { 'speed': -0.15 },
+        'productivity-module-3': { 'speed': -0.15 }
+    }
+
+    def parse_effect(module_name, effect):
+        return { en: e['bonus'] if 'bonus' in e else missing_bonuses[module_name][en] for en, e in effect.items() }
+
+    productivity_recipes = [
+        'sulfuric-acid',
+        'basic-oil-processing',
+        'advanced-oil-processing',
+        'coal-liquefaction',
+        'heavy-oil-cracking',
+        'light-oil-cracking',
+        'solid-fuel-from-light-oil',
+        'solid-fuel-from-heavy-oil',
+        'solid-fuel-from-petroleum-gas',
+        'lubricant',
+        'wood',
+        'iron-plate',
+        'copper-plate',
+        'steel-plate',
+        'stone-brick',
+        'sulfur',
+        'plastic-bar',
+        'empty-barrel',
+        'uranium-processing',
+        'copper-cable',
+        'iron-stick',
+        'iron-gear-wheel',
+        'electronic-circuit',
+        'advanced-circuit',
+        'processing-unit',
+        'engine-unit',
+        'electric-engine-unit',
+        'uranium-fuel-cell',
+        'explosives',
+        'battery',
+        'flying-robot-frame',
+        'low-density-structure',
+        'rocket-fuel',
+        'rocket-control-unit',
+        'rocket-part',
+        'science-pack-1',
+        'science-pack-2',
+        'science-pack-3',
+        'military-science-pack',
+        'production-science-pack',
+        'high-tech-science-pack'
+    ]
+
+    items = data_segment('item')
+
+    modules = [ i for i in items if i.get('type', None) == 'module' ]
+
+    db_modules = {
+        module['name']: {
+            'name': module['name'],
+            'description': item_description(module['name']),
+            'category': module['category'],
+            'tier': module['tier'],
+            'effect': parse_effect(module['name'], module['effect']),
+            'validRecipes': productivity_recipes if module['category'] == 'productivity' else []
+        } for module in modules }
+
+    return db_modules
+
 
 def get_fluid_icons():
     fluids = data_segment('fluid')
@@ -376,9 +451,10 @@ fallback_icons = {
 if __name__ == '__main__':
     recipes, recipe_icons = parse_recipes()
     entities, entity_icons = parse_entities()
+    modules = parse_modules()
 
     if _write_data:
-        upload_data(dict(recipes=recipes, **entities))
+        upload_data(dict(recipes=recipes, modules=modules, **entities))
 
     if _write_icons:
         missing_icons = {k: v for k, v in entity_icons.items() if k not in recipe_icons}

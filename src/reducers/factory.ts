@@ -1,7 +1,8 @@
 import { combineReducers } from 'redux';
 
-import goalsReducer from './factory/goals';
-import { Factory } from '../../types/state';
+import { Factory } from '../types/state';
+
+import goalsReducer from './goals';
 
 export default combineReducers<Factory>({
   goals: goalsReducer,

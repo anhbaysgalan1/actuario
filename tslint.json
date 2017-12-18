@@ -19,15 +19,20 @@
         "indent": [ true, "spaces" ],
         "interface-name": [true, "never-prefix"],
         "jsdoc-format": true,
+        "jsx-boolean-value": [true, "never"],
         "jsx-no-lambda": false,
         "jsx-no-multiline-js": false,
         "label-position": true,
         "max-line-length": [ true, 120 ],
         "member-ordering": [
             true,
-            "public-before-private",
-            "static-before-instance",
-            "variables-before-functions"
+            {
+                "order": [
+                    "public-before-private",
+                    "static-before-instance",
+                    "variables-before-functions"
+                ]
+            }
         ],
         "no-any": true,
         "no-arg": true,
@@ -94,6 +99,12 @@
             "check-separator",
             "check-type",
             "check-typecast"
+        ],
+        "ordered-imports": [
+            true,
+            {
+                "grouped-imports": true
+            }
         ]
     }
 }

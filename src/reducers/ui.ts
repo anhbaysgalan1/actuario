@@ -1,7 +1,7 @@
 import { createReducer } from 'redux-act';
 
-import { setFactoryView, changeUiWidth, setUiViewState, toggleNavDrawer } from '../actions/ui';
-import { FactoryView, UiViewState, UiState } from '../types/state';
+import { changeUiWidth, setFactoryView, setUiViewState, toggleNavDrawer } from '../actions/ui';
+import { FactoryView, UiState, UiViewState } from '../types/state';
 
 const smallScreenThreshold = 700; // px
 

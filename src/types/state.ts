@@ -1,5 +1,6 @@
 
 import { FirebaseError } from 'firebase';
+import { List, Map } from 'immutable';
 import { RequestError } from 'request-promise/errors';
 
 import { FactorioData } from './factorio';
@@ -56,21 +57,20 @@ export interface ProductionGoal {
   readonly enabled: boolean;
 }
 
-export type ProductionOption = { [name: string]: number };
-
-export interface ProductionOptions {
-  crafters: ProductionOption;
-  modules: ProductionOption;
+export interface CrafterConfig {
+    readonly name: string;
+    readonly count: number;
+    readonly modules: Array<string | null>;
 }
 
-export type ProductionManifest = { [name: string]: ProductionOptions };
+export type ProductionManifest = Map<string, List<CrafterConfig>>;
 
 export interface ScienceGoal extends ProductionGoal {
   readonly sciencePacks: ProductionManifest;
 }
 
 export interface RocketGoal extends ProductionGoal {
-  readonly production: ProductionOptions;
+  readonly production: List<CrafterConfig>;
 }
 
 export interface CustomGoal extends ProductionGoal {

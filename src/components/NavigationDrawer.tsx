@@ -1,13 +1,13 @@
-import * as React from 'react';
 import * as _ from 'lodash';
-import { withStyles } from 'material-ui/styles';
 import { Drawer } from 'material-ui';
 import List, { ListItem, ListItemText } from 'material-ui/List';
-
+import { withStyles } from 'material-ui/styles';
 import { ThemeOptions } from 'material-ui/styles/createMuiTheme';
 import { StyleRulesCallback, WithStyles } from 'material-ui/styles/withStyles';
-import { UiViewState } from '../types/state';
+import * as React from 'react';
 import { Action } from 'redux-act';
+
+import { UiViewState } from '../types/state';
 
 const styles: StyleRulesCallback = (theme: ThemeOptions) => ({
   navList: {
@@ -21,7 +21,7 @@ const styles: StyleRulesCallback = (theme: ThemeOptions) => ({
 const NavigationDrawer: React.SFC<NavigationDrawerProps & WithStyles> =
   ({ navDrawerOpen, setUiView, closeNavDrawer, classes }) => {
     const navItem: (view: UiViewState, caption: string) => JSX.Element = (view, caption) => (
-      <ListItem button={true} onClick={() => setUiView(view)}>
+      <ListItem button onClick={() => setUiView(view)}>
         <ListItemText primary={caption} />
       </ListItem>
     );

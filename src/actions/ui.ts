@@ -1,4 +1,5 @@
 import { createAction } from 'redux-act';
+
 import { FactoryView, UiViewState } from '../types/state';
 
 export const setFactoryView = createAction<FactoryView>('set factory view');

@@ -1,11 +1,12 @@
 
 export interface FactorioData {
-  readonly recipes: { [name: string]: Recipe };
-  readonly crafters: { [name: string]: Crafter };
-  readonly inserters: { [name: string]: Inserter };
-  readonly belts: { [name: string]: Belt };
-  readonly drills: { [name: string]: Drill };
-  readonly lab: { [name: string]: Lab };
+  readonly recipes: { readonly [name: string]: Recipe };
+  readonly crafters: { readonly [name: string]: Crafter };
+  readonly inserters: { readonly [name: string]: Inserter };
+  readonly belts: { readonly [name: string]: Belt };
+  readonly drills: { readonly [name: string]: Drill };
+  readonly lab: { readonly [name: string]: Lab };
+  readonly modules: { readonly [name: string]: Module };
   readonly goals: Goals;
 }
 
@@ -34,7 +35,14 @@ export interface Powered {
 }
 
 export enum RecipeCategory {
-  Crafting = 'crafting'
+  Crafting = 'crafting',
+  AdvancedCrafting = 'advanced-crafting',
+  Smelting = 'smelting',
+  OilProcessing = 'oil-processing',
+  Chemistry = 'chemistry',
+  FluidCrafting = 'crafting-with-fluid',
+  RocketBuilding = 'rocket-building',
+  Centrifuging = 'centrifuging'
 }
 
 export interface Recipe extends Entity {
@@ -67,6 +75,25 @@ export interface Drill extends Entity, Modular, Powered {
 
 export interface Lab extends Entity, Modular, Powered {
   readonly researchSpeed: number;
+}
+
+export enum ModuleCategory {
+    Speed = 'speed',
+    Productivity = 'productivity',
+    Efficiency = 'effectivity'
+}
+
+export interface ModuleEffect {
+    readonly consumption?: number;
+    readonly speed?: number;
+    readonly productivity?: number;
+}
+
+export interface Module extends Entity {
+    readonly category: ModuleCategory;
+    readonly validRecipes: string[];
+    readonly tier: number;
+    readonly effect: ModuleEffect;
 }
 
 export interface Goals {

@@ -1,8 +1,9 @@
 import { connect } from 'react-redux';
-import App from '../components/App';
-import { toggleNavDrawer } from '../actions/ui';
-import { ActuarioState } from '../types/state';
 import { Dispatch } from 'redux';
+
+import { toggleNavDrawer } from '../actions/ui';
+import App from '../components/App';
+import { ActuarioState } from '../types/state';
 
 const mapStateToProps = (state: ActuarioState) => ({
   viewState: state.ui.viewState,
