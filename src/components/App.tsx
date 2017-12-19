@@ -1,110 +1,78 @@
-import { AppBar, IconButton, Toolbar, Typography } from 'material-ui';
-import Menu from 'material-ui-icons/Menu';
+import { AppBar, Toolbar, Typography } from 'material-ui';
 import { StyleRules, withStyles } from 'material-ui/styles';
 import { WithStyles } from 'material-ui/styles/withStyles';
+import Tabs, { Tab } from 'material-ui/Tabs';
 import * as React from 'react';
 import { Action } from 'redux-act';
 
-import NavigationDrawerContainer from '../containers/NavigationDrawerContainer';
+import RocketGoalContainer from '../containers/RocketGoalContainer';
 import ScienceGoalContainer from '../containers/ScienceGoalContainer';
 import { UiViewState } from '../types/state';
 
 const styles: StyleRules = {
-  appContainer: {
-    height: '100vh',
-    display: 'flex',
-    flexFlow: 'column nowrap',
-    alignItems: 'stretch',
-    alignContent: 'flex-start',
-    '& > $content': {
-      margin: 16,
+    appContainer: {
+        height: '100vh',
+        display: 'flex',
+        flexFlow: 'column nowrap',
+        alignItems: 'stretch',
+        alignContent: 'flex-start',
+        '& > $content': {
+            margin: 16,
+        },
     },
-  },
-  splitContent: {
-    flex: 1,
-    padding: 16,
-    marginLeft: -16,
-    display: 'flex',
-    flexFlow: 'row nowrap',
-    alignItems: 'stretch',
-    alignContent: 'space-between',
-    '& > $content': {
-      padding: 16,
-      marginLeft: 16,
-    },
-  },
-  content: {
-    flex: 1
-  },
-  menuButton: {
-    marginLeft: -12,
-    marginRight: 20,
-  },
+    content: {
+        flex: 1
+    }
 };
 
-const App: React.SFC<AppProps & WithStyles> = ({ viewState, showNavDrawer, classes }) => {
-  const goalCards = (
-    <div className={classes.content}>
-      <ScienceGoalContainer />
-    </div>
-  );
-  const resultSheet = <div className={classes.content}>Results go here</div>;
-
-  let showMenuButton;
-  let appContent;
-
-  switch (viewState) {
-    case UiViewState.Goals:
-      showMenuButton = true;
-      appContent = goalCards;
-      break;
-    case UiViewState.Factory:
-      showMenuButton = true;
-      appContent = resultSheet;
-      break;
-    case UiViewState.Split:
-    default:
-      showMenuButton = false;
-      appContent = (
-        <div className={classes.splitContent}>
-          {goalCards}
-          {resultSheet}
+const App: React.SFC<AppProps & WithStyles> = ({ viewState, setUiView, classes }) => {
+    const goalCards = (
+        <div className={classes.content}>
+            <ScienceGoalContainer />
+            <RocketGoalContainer />
         </div>
-      );
-  }
-
-  let menuButton = null;
-  if (showMenuButton)
-    menuButton = (
-      <IconButton
-        className={classes.menuButton}
-        onClick={showNavDrawer}
-        color="contrast"
-        aria-label="Menu"
-      >
-        <Menu />
-      </IconButton>
     );
+    const rawSheet = <div className={classes.content}>Raw stuff goes here</div>;
+    const outpostsSheet = <div className={classes.content}>Outpost stuff goes here</div>;
 
-  return (
-    <div className={classes.appContainer}>
-      <NavigationDrawerContainer />
-      <AppBar position="static">
-        <Toolbar >
-          {menuButton}
-          <Typography type="title">
-            Actuario
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      {appContent}
-    </div>
-  );
+    let appContent;
+
+    switch (viewState) {
+        case UiViewState.Raw:
+            appContent = rawSheet;
+            break;
+        case UiViewState.Outposts:
+            appContent = outpostsSheet;
+            break;
+        case UiViewState.Goals:
+        default:
+            appContent = goalCards;
+            break;
+    }
+
+    return (
+        <div className={classes.appContainer}>
+            <AppBar position="static">
+                <Toolbar>
+                    <Typography type="title">Actuario</Typography>
+                </Toolbar>
+                <Tabs
+                    value={viewState}
+                    onChange={(e, v: UiViewState) => setUiView(v)}
+                >
+                    <Tab label="Goals" value={UiViewState.Goals} />
+                    <Tab label="Raw" value={UiViewState.Raw} />
+                    <Tab label="Outposts" value={UiViewState.Outposts} disabled />
+                </Tabs>
+            </AppBar>
+            {appContent}
+        </div>
+    );
 };
 
-interface AppProps {
-  readonly viewState: UiViewState;
-  readonly showNavDrawer: () => Action<boolean>;
+export interface AppProps {
+    readonly viewState: UiViewState;
+    readonly setUiView: (newViewState: UiViewState) => Action<UiViewState>;
 }
 
 export default withStyles(styles)(App);

@@ -18,20 +18,13 @@ export interface DataState {
 }
 
 export enum UiViewState {
-  Split = 'split',
   Goals = 'goals',
-  Factory = 'factory'
-}
-
-export enum FactoryView {
-  Overall = 'overall',
-  Outposts = 'outposts' 
+  Raw = 'raw',
+  Outposts = 'outposts'
 }
 
 export interface UiState {
-  readonly factoryView: FactoryView;
   readonly viewState: UiViewState;
-  readonly navDrawerOpen: boolean;
 }
 
 export interface UserState {

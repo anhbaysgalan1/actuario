@@ -6,12 +6,12 @@ import { UiViewState } from '../types/state';
 
 import App from './App';
 
-const mockShowNavDrawer: () => Action<boolean> = () => ({
-  type: 'show_nav_drawer',
-  payload: true
+const setUiViewState: (v: UiViewState) => Action<UiViewState> = () => ({
+  type: 'set_ui_view',
+  payload: UiViewState.Goals
 });
 
 it('renders without crashing', () => {
   const div = document.createElement('div');
-  ReactDOM.render(<App viewState={UiViewState.Split} showNavDrawer={mockShowNavDrawer} />, div);
+  ReactDOM.render(<App viewState={UiViewState.Goals} setUiView={setUiViewState} />, div);
 });

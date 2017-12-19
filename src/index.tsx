@@ -8,13 +8,10 @@ import thunkMiddleware from 'redux-thunk';
 import { amber, grey } from 'material-ui/colors';
 import { createMuiTheme, MuiThemeProvider } from 'material-ui/styles';
 
-import * as _ from 'lodash';
-
 import './index.css';
 import { defaultPrefs } from './reducers/prefs';
 
 import { fetchData } from './actions/data';
-import { changeUiWidth } from './actions/ui';
 import AppContainer from './containers/AppContainer';
 import reducers from './reducers/actuario';
 
@@ -39,15 +36,6 @@ firebase.auth().onAuthStateChanged((user) => {
     else
         firebase.auth().signInAnonymously();
 });
-
-function handleResize(e: Event): void {
-    const newWidth = (e.target as Window).innerWidth;
-    store.dispatch(changeUiWidth(newWidth));
-}
-
-window.addEventListener(
-    'resize',
-    _.throttle(handleResize, 500, { leading: true, trailing: true }));
 
 const muiTheme = createMuiTheme({
     palette: {
