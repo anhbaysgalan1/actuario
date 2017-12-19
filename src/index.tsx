@@ -5,7 +5,7 @@ import { Provider } from 'react-redux';
 import { applyMiddleware, createStore } from 'redux';
 import thunkMiddleware from 'redux-thunk';
 
-import { amber, grey } from 'material-ui/colors';
+import * as Colors from 'material-ui/colors';
 import { createMuiTheme, MuiThemeProvider } from 'material-ui/styles';
 
 import './index.css';
@@ -39,8 +39,8 @@ firebase.auth().onAuthStateChanged((user) => {
 
 const muiTheme = createMuiTheme({
     palette: {
-        primary: amber,
-        secondary: grey,
+        primary: Colors.orange,
+        secondary: Colors.grey,
     },
 });
 
