@@ -1,5 +1,6 @@
 import { AppBar, Toolbar, Typography } from 'material-ui';
 import { StyleRules, withStyles } from 'material-ui/styles';
+import Spacing from 'material-ui/styles/spacing';
 import { WithStyles } from 'material-ui/styles/withStyles';
 import Tabs, { Tab } from 'material-ui/Tabs';
 import * as React from 'react';
@@ -17,7 +18,7 @@ const styles: StyleRules = {
         alignItems: 'stretch',
         alignContent: 'flex-start',
         '& > $content': {
-            margin: 16,
+            margin: Spacing.unit * 2,
         },
     },
     content: {

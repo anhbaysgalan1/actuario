@@ -4,6 +4,7 @@ import Card, { CardContent, CardHeader } from 'material-ui/Card';
 import { FormControlLabel } from 'material-ui/Form';
 import ListComponent, { ListItem, ListItemAvatar, ListItemText } from 'material-ui/List';
 import { StyleRules, withStyles } from 'material-ui/styles';
+import Spacing from 'material-ui/styles/spacing';
 import { WithStyles } from 'material-ui/styles/withStyles';
 import * as React from 'react';
 import { Action } from 'redux-act';
@@ -29,6 +30,9 @@ const styles: StyleRules = {
         flexFlow: 'row nowrap',
         justifyContent: 'space-between',
         alignItems: 'center',
+    },
+    card: {
+        marginBottom: Spacing.unit * 2
     }
 };
 
@@ -101,7 +105,7 @@ class GoalCard extends React.Component<GoalCardProps & WithStyles, GoalCardState
         });
 
         return (
-            <Card>
+            <Card className={classes.card}>
                 <CardHeader title={cardTitle} />
                 <CardContent className={enabled ? classes.enabledContents : classes.disabledContents}>
                     <ListComponent>{productionListItems}</ListComponent>
