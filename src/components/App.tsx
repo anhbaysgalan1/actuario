@@ -90,9 +90,9 @@ const App: React.SFC<AppProps & WithStyles> = ({ viewState, showNavDrawer, class
     <div className={classes.appContainer}>
       <NavigationDrawerContainer />
       <AppBar position="static">
-        <Toolbar>
+        <Toolbar >
           {menuButton}
-          <Typography type="title" color="inherit">
+          <Typography type="title">
             Actuario
           </Typography>
         </Toolbar>

@@ -2,7 +2,9 @@ import { Repeat } from 'immutable';
 import * as _ from 'lodash';
 import Button from 'material-ui/Button';
 import Menu, { MenuItem } from 'material-ui/Menu';
+import { StyleRules, withStyles, WithStyles } from 'material-ui/styles';
 import * as React from 'react';
+import { SyntheticEvent } from 'react';
 import { connect } from 'react-redux';
 
 import ItemIcon from '../components/ItemIcon';
@@ -25,24 +27,34 @@ function mapStateToProps(state: ActuarioState, { recipe, onSelect }: CrafterPick
         return { availableCrafters: [], onSelect };
     
     const recipeCategory = state.data.factorio.recipes[recipe].category;
-    const availableCrafters = _.filter(
-        state.data.factorio.crafters,
-        c => _.includes(c.craftingCategories, recipeCategory));
+    const availableCrafters = _(state.data.factorio.crafters)
+        .filter(c => _.includes(c.craftingCategories, recipeCategory))
+        .sortBy((c: Crafter) => c.craftingSpeed)
+        .value();
 
     return { availableCrafters, onSelect };
 }
 
-interface PickerState { readonly open: boolean; }
+interface PickerState {
+    readonly open: boolean;
+    readonly anchorEl?: HTMLElement;
+}
 
-class InnerComponent extends React.Component<InnerProps, PickerState> {
+const styles: StyleRules = {
+    container: {
+        display: 'inline-flex'
+    }
+};
 
-    constructor(props: InnerProps) {
+class InnerComponent extends React.Component<InnerProps & WithStyles, PickerState> {
+
+    constructor(props: InnerProps & WithStyles) {
         super(props);
         this.state = { open: false };
     }
 
-    toggleMenu(open: boolean) {
-        this.setState({ open });
+    toggleMenu(open: boolean, anchorEl?: HTMLElement) {
+        this.setState({ open, anchorEl });
     }
 
     handleSelectCrafter(crafter: Crafter) {
@@ -55,14 +67,17 @@ class InnerComponent extends React.Component<InnerProps, PickerState> {
     }
 
     render() {
-        const { availableCrafters } = this.props;
-        const { open } = this.state;
+        const { availableCrafters, classes } = this.props;
+        const { open, anchorEl } = this.state;
 
         return (
-            <div>
-                <Button onClick={() => this.toggleMenu(!open)}>Add crafter...</Button>
+            <div className={classes.container}>
+                <Button onClick={(e: SyntheticEvent<HTMLElement>) => this.toggleMenu(!open, e.currentTarget)}>
+                    Add crafter...
+                </Button>
                 <Menu
                     open={open}
+                    anchorEl={anchorEl}
                     onRequestClose={() => this.toggleMenu(false)}
                 >
                     {
@@ -78,4 +93,4 @@ class InnerComponent extends React.Component<InnerProps, PickerState> {
     }
 }
 
-export default connect(mapStateToProps)(InnerComponent);
+export default connect(mapStateToProps)(withStyles(styles)(InnerComponent));

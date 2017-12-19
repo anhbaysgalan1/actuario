@@ -60,7 +60,7 @@ class ScienceGoal extends React.Component<ScienceGoalProps & WithStyles, Science
         const cardTitle = (
             <div className={classes.title}>
                 <span>Science</span>
-                <FormControlLabel control={enabledSwitch} label="Enabled" />
+                <FormControlLabel control={enabledSwitch} label="Enabled" color="accent" />
             </div>
         );
 

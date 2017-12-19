@@ -9,7 +9,7 @@ import { CrafterConfig, Goals, ProductionManifest } from '../types/state';
 
 const GoalsRecord = Record<Goals>({
     science: {
-        enabled: false,
+        enabled: true,
         sciencePacks: Map<string, List<CrafterConfig>>()
     },
     rocket: {

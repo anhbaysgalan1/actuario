@@ -30,7 +30,15 @@ export interface ProductionDialogProps {
 }
 
 const styles: StyleRules = {
-
+    iconCell: {
+        width: 70
+    },
+    countCell: {
+        minWidth: 80
+    },
+    modulesCell: {
+        minWidth: 160
+    }
 };
 
 type TotalProps = ProductionDialogProps & WithStyles & InjectedProps;
@@ -75,15 +83,15 @@ class ProductionDialog extends React.Component<TotalProps, ProductionDialogState
     }
 
     render() {
-        const { fullScreen, isOpen } = this.props;
+        const { fullScreen, isOpen, classes } = this.props;
         const { save, cancel } = this.props;
 
         const { production: { resultRates, crafters, ...recipe } } = this.state;
 
         const tableRows = crafters.map((crafter, cIdx) => (
             <TableRow key={cIdx}>
-                <TableCell><ItemIcon {...crafter} /></TableCell>
-                <TableCell>
+                <TableCell padding="dense"><ItemIcon {...crafter} /></TableCell>
+                <TableCell className={classes.countCell}>
                     <TextField
                         id={`crafter-${cIdx}`}
                         value={crafter.count}
@@ -91,7 +99,7 @@ class ProductionDialog extends React.Component<TotalProps, ProductionDialogState
                             this.updateCount(cIdx, _.toInteger(e.target.value))}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell className={classes.modulesCell} padding="dense">
                     {
                         crafter.modules.map((m, mIdx) =>
                             <ModulePicker
@@ -107,33 +115,32 @@ class ProductionDialog extends React.Component<TotalProps, ProductionDialogState
         ));
 
         return (
-            <Dialog fullScreen={fullScreen} open={isOpen} onRequestClose={() => cancel()}>
+            <Dialog
+                fullWidth
+                fullScreen={fullScreen}
+                open={isOpen}
+                onRequestClose={() => cancel()}
+            >
                 <DialogTitle>{`Production Details: ${recipe.description}`}</DialogTitle>
 
                 <DialogContent>
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>Crafter</TableCell>
+                                <TableCell padding="dense">Crafter</TableCell>
                                 <TableCell>Count</TableCell>
                                 <TableCell>Modules</TableCell>
                                 <TableCell>Remove</TableCell>
                             </TableRow>
                         </TableHead>
-                        <TableBody>
-                            {tableRows}
-                            <TableRow>
-                                <TableCell>
-                                    <CrafterPicker recipe={recipe.name} onSelect={(c) => this.addCrafter(c)} />
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
+                        <TableBody>{tableRows}</TableBody>
                     </Table>
+                    <CrafterPicker recipe={recipe.name} onSelect={(c) => this.addCrafter(c)} />
                 </DialogContent>
 
                 <DialogActions>
-                    <Button onClick={() => this.handleCancel()} color="primary">Cancel</Button>
-                    <Button onClick={() => save(this.state.production)} color="accent">Save</Button>
+                    <Button onClick={() => this.handleCancel()}>Cancel</Button>
+                    <Button onClick={() => save(this.state.production)}>Save</Button>
                 </DialogActions>
             </Dialog>
         );
