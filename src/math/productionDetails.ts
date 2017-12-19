@@ -2,7 +2,7 @@
 import { List } from 'immutable';
 import * as _ from 'lodash';
 
-import { FactorioData, Module } from '../types/factorio';
+import { FactorioData, Module, Recipe } from '../types/factorio';
 import { CrafterDetails, ProductionDetails } from '../types/props';
 import { ActuarioState, CrafterConfig, ProductionManifest } from '../types/state';
 
@@ -34,6 +34,15 @@ export function calculateProductionRate(crafter: CrafterDetails, recipeEffort: n
     return crafter.count * (rpsWithSpeedBonus + prodBonusRate);
 }
 
+type Results = { readonly [name: string]: number };
+export function calculateResultRates(recipe: Recipe, crafters: List<CrafterDetails>): Results {
+    return _.mapValues(
+        recipe.results,
+        (count, resultName) =>
+            count * _.sum(crafters.map(
+                crafter => calculateProductionRate(crafter, recipe.effort)).toArray()));
+}
+
 export function calculateProductionDetails(
         recipeName: string, crafters: List<CrafterConfig>, data: FactorioData): ProductionDetails {
 
@@ -46,11 +55,7 @@ export function calculateProductionDetails(
 
     const recipe = data.recipes[recipeName];
 
-    const resultRates = _.mapValues(
-        recipe.results,
-        (count, resultName) =>
-            count * _.sum(detailedCrafters.map(
-                crafter => calculateProductionRate(crafter, recipe.effort)).toArray()));
+    const resultRates = calculateResultRates(recipe, detailedCrafters);
 
     return { ...recipe, crafters: detailedCrafters, resultRates };
 

@@ -10,12 +10,15 @@ import { StyleRules } from 'material-ui/styles';
 import withStyles, { WithStyles } from 'material-ui/styles/withStyles';
 import TableBody from 'material-ui/Table/TableBody';
 import TableRow from 'material-ui/Table/TableRow';
+import Typography from 'material-ui/Typography/Typography';
 import { ChangeEvent } from 'react';
 import * as React from 'react';
 import { Action } from 'redux-act';
 
 import CrafterPicker from '../containers/CrafterPicker';
 import ModulePicker from '../containers/ModulePicker';
+import { calculateResultRates } from '../math/productionDetails';
+import { formatRate } from '../math/rates';
 import { Module } from '../types/factorio';
 import { CrafterDetails, ProductionDetails } from '../types/props';
 
@@ -55,7 +58,11 @@ class ProductionDialog extends React.Component<TotalProps, ProductionDialogState
     }
 
     updateCrafters(crafters: List<CrafterDetails>) {
-        const production = { ...this.state.production, crafters };
+        const production = {
+            ...this.state.production,
+            crafters,
+            resultRates: calculateResultRates(this.state.production, crafters)
+        };
         this.setState({ production });
     }
 
@@ -121,8 +128,11 @@ class ProductionDialog extends React.Component<TotalProps, ProductionDialogState
                 open={isOpen}
                 onRequestClose={() => cancel()}
             >
-                <DialogTitle>{`Production Details: ${recipe.description}`}</DialogTitle>
-
+                <DialogTitle>
+                    {`Production Details: ${recipe.description}`}
+                    <Typography type="caption">{`Rate: ${formatRate(resultRates[recipe.name])}`}</Typography>
+                </DialogTitle>
+                
                 <DialogContent>
                     <Table>
                         <TableHead>
@@ -135,10 +145,10 @@ class ProductionDialog extends React.Component<TotalProps, ProductionDialogState
                         </TableHead>
                         <TableBody>{tableRows}</TableBody>
                     </Table>
-                    <CrafterPicker recipe={recipe.name} onSelect={(c) => this.addCrafter(c)} />
                 </DialogContent>
 
                 <DialogActions>
+                    <CrafterPicker recipe={recipe.name} onSelect={(c) => this.addCrafter(c)} />
                     <Button onClick={() => this.handleCancel()}>Cancel</Button>
                     <Button onClick={() => save(this.state.production)}>Save</Button>
                 </DialogActions>

@@ -8,6 +8,7 @@ import { WithStyles } from 'material-ui/styles/withStyles';
 import * as React from 'react';
 import { Action } from 'redux-act';
 
+import { formatRate } from '../math/rates';
 import { ProductionDetails } from '../types/props';
 import { Goals } from '../types/state';
 
@@ -75,7 +76,10 @@ class GoalCard extends React.Component<GoalCardProps & WithStyles, GoalCardState
                     <ListItemAvatar>
                         <ItemIcon name={name} description={description}/>
                     </ListItemAvatar>
-                    <ListItemText primary={description} secondary={`Rate: ${resultRates[name]} ups`} />
+                    <ListItemText
+                        primary={description}
+                        secondary={`Rate: ${formatRate(resultRates[name])}`}
+                    />
                 </ListItem>
             );
         });

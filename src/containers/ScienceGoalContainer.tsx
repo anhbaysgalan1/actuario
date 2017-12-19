@@ -3,7 +3,7 @@ import { connect, Dispatch } from 'react-redux';
 
 import GoalActions from '../actions/goals';
 import GoalCard from '../components/GoalCard';
-import { calculateProductionDetails } from '../selectors/productionDetails';
+import { calculateProductionDetails } from '../math/productionDetails';
 import { FactorioData } from '../types/factorio';
 import { ProductionDetails } from '../types/props';
 import { ActuarioState } from '../types/state';
