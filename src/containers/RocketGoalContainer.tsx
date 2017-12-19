@@ -9,22 +9,22 @@ import { ProductionDetails } from '../types/props';
 import { ActuarioState } from '../types/state';
 
 const mapStateToProps = (state: ActuarioState) => {
-    const scienceGoals = state.user.factory.goals.science;
+    const rocketGoal = state.user.factory.goals.rocket;
 
     let production: List<ProductionDetails>;
     if (state.data.factorio)
-        production = scienceGoals.sciencePacks
-            .map((crafters, recipeName) =>
-                calculateProductionDetails(recipeName, crafters, state.data.factorio as FactorioData))
-            .toList();
+        production = List([calculateProductionDetails(
+            'rocket-part',
+            rocketGoal.production,
+            state.data.factorio as FactorioData)]);
     else
         production = List();
 
-    return { enabled: scienceGoals.enabled, production, title: 'Science' };
+    return { enabled: rocketGoal.enabled, production, title: 'Rocket' };
 };
 
 const mapDispatchToProps = (dispatch: Dispatch<ActuarioState>) => ({
-    toggleGoal: () => dispatch(GoalActions.toggleGoal('science')),
+    toggleGoal: () => dispatch(GoalActions.toggleGoal('rocket')),
     updateProduction: (newProduction: ProductionDetails) => dispatch(GoalActions.updateProduction(newProduction))
 });
 

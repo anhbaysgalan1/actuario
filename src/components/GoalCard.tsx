@@ -14,7 +14,8 @@ import { Goals } from '../types/state';
 import ItemIcon from './ItemIcon';
 import ProductionDialog from './ProductionDialog';
 
-export interface ScienceGoalProps {
+export interface GoalCardProps {
+    readonly title: string;
     readonly enabled: boolean;
     readonly production: List<ProductionDetails>;
     readonly toggleGoal: () => Action<keyof Goals>;
@@ -30,18 +31,18 @@ const styles: StyleRules = {
     }
 };
 
-interface ScienceGoalState {
+interface GoalCardState {
     readonly dialogs: Map<string, boolean>;
 }
 
-class ScienceGoal extends React.Component<ScienceGoalProps & WithStyles, ScienceGoalState> {
+class GoalCard extends React.Component<GoalCardProps & WithStyles, GoalCardState> {
 
-    constructor(props: ScienceGoalProps & WithStyles) {
+    constructor(props: GoalCardProps & WithStyles) {
         super(props);
         this.state = { dialogs: Map() };
     }
 
-    componentWillReceiveProps(newProps: ScienceGoalProps & WithStyles) {
+    componentWillReceiveProps(newProps: GoalCardProps & WithStyles) {
         if (this.state.dialogs.isEmpty() && !newProps.production.isEmpty())
             this.setState({
                 dialogs: Map(newProps.production.map<[string, boolean]>(
@@ -53,13 +54,13 @@ class ScienceGoal extends React.Component<ScienceGoalProps & WithStyles, Science
     }
 
     render() {
-        const { classes, enabled, production, ...handlers } = this.props;
+        const { title, classes, enabled, production, ...handlers } = this.props;
 
         const enabledSwitch = <Switch checked={enabled} onChange={() => handlers.toggleGoal()} />;
 
         const cardTitle = (
             <div className={classes.title}>
-                <span>Science</span>
+                <span>{title}</span>
                 <FormControlLabel control={enabledSwitch} label="Enabled" color="accent" />
             </div>
         );
@@ -107,4 +108,4 @@ class ScienceGoal extends React.Component<ScienceGoalProps & WithStyles, Science
     }
 }
 
-export default withStyles(styles)(ScienceGoal);
+export default withStyles(styles)(GoalCard);
