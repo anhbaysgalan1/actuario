@@ -6,6 +6,7 @@ import Tabs, { Tab } from 'material-ui/Tabs';
 import * as React from 'react';
 import { Action } from 'redux-act';
 
+import ResourceSheetContainer from '../containers/ResourceSheetContainer';
 import RocketGoalContainer from '../containers/RocketGoalContainer';
 import ScienceGoalContainer from '../containers/ScienceGoalContainer';
 import { UiViewState } from '../types/state';
@@ -33,14 +34,14 @@ const App: React.SFC<AppProps & WithStyles> = ({ viewState, setUiView, classes }
             <RocketGoalContainer />
         </div>
     );
-    const rawSheet = <div className={classes.content}>Raw stuff goes here</div>;
+    const resourceSheet = <ResourceSheetContainer />;
     const outpostsSheet = <div className={classes.content}>Outpost stuff goes here</div>;
 
     let appContent;
 
     switch (viewState) {
-        case UiViewState.Raw:
-            appContent = rawSheet;
+        case UiViewState.Resource:
+            appContent = resourceSheet;
             break;
         case UiViewState.Outposts:
             appContent = outpostsSheet;
@@ -62,7 +63,7 @@ const App: React.SFC<AppProps & WithStyles> = ({ viewState, setUiView, classes }
                     onChange={(e, v: UiViewState) => setUiView(v)}
                 >
                     <Tab label="Goals" value={UiViewState.Goals} />
-                    <Tab label="Raw" value={UiViewState.Raw} />
+                    <Tab label="Resource" value={UiViewState.Resource} />
                     <Tab label="Outposts" value={UiViewState.Outposts} disabled />
                 </Tabs>
             </AppBar>

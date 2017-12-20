@@ -19,7 +19,7 @@ export interface DataState {
 
 export enum UiViewState {
   Goals = 'goals',
-  Raw = 'raw',
+  Resource = 'resource',
   Outposts = 'outposts'
 }
 

@@ -21,7 +21,7 @@ _item_descriptions = None
 _factorio_data = None
 
 # whether to actually send these to the database or just read them from disk
-_write_data, _write_icons = (True, False)
+_write_data, _write_icons = (True, True)
 
 firebase_cred = credentials.Certificate(config['firebase-key'])
 actuario_app = firebase_admin.initialize_app(firebase_cred, options={
@@ -404,6 +404,50 @@ def parse_modules():
     return db_modules
 
 
+def get_resources():
+    return {
+        'iron-ore': {
+            'name': 'iron-ore',
+            'description': 'Iron Ore',
+            'hardness': 0.9,
+            'miningTime': 2
+        },
+        'copper-ore': {
+            'name': 'copper-ore',
+            'description': 'Copper Ore',
+            'hardness': 0.9,
+            'miningTime': 2
+        },
+        'coal': {
+            'name': 'coal',
+            'description': 'Coal',
+            'hardness': 0.9,
+            'miningTime': 2
+        },
+        'stone': {
+            'name': 'stone',
+            'description': 'Stone',
+            'hardness': 0.4,
+            'miningTime': 2
+        },
+        'uranium-ore': {
+            'name': 'uranium-ore',
+            'description': 'Uranium Ore',
+            'hardness': 0.9,
+            'miningTime': 4,
+            'requiredFluid': {
+                'sulfuric-acid': 10
+            }
+        },
+        'crude-oil': {
+            'name': 'crude-oil',
+            'description': 'Crude Oil',
+            'hardness': 1,
+            'miningTime': 1
+        }
+    }
+
+
 def get_fluid_icons():
     fluids = data_segment('fluid')
     return {f['name']: f['icon'] for f in fluids}
@@ -444,7 +488,12 @@ def upload_data(data):
 
 
 fallback_icons = {
-    'space-science-pack': '__base__/graphics/icons/space-science-pack.png'
+    'space-science-pack': '__base__/graphics/icons/space-science-pack.png',
+    'iron-ore': '__base__/graphics/icons/iron-ore.png',
+    'copper-ore': '__base__/graphics/icons/copper-ore.png',
+    'coal': '__base__/graphics/icons/coal.png',
+    'stone': '__base__/graphics/icons/stone.png',
+    'uranium-ore': '__base__/graphics/icons/uranium-ore.png'
 }
 
 
@@ -452,9 +501,13 @@ if __name__ == '__main__':
     recipes, recipe_icons = parse_recipes()
     entities, entity_icons = parse_entities()
     modules = parse_modules()
+    resources = get_resources()
 
     if _write_data:
-        upload_data(dict(recipes=recipes, modules=modules, **entities))
+        upload_data(dict(recipes=recipes,
+                           modules=modules,
+                           resources=resources,
+                           **entities))
 
     if _write_icons:
         missing_icons = {k: v for k, v in entity_icons.items() if k not in recipe_icons}

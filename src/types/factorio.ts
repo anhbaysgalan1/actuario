@@ -1,6 +1,7 @@
 
 export interface FactorioData {
   readonly recipes: { readonly [name: string]: Recipe };
+  readonly resources: { readonly [name: string]: Resource };
   readonly crafters: { readonly [name: string]: Crafter };
   readonly inserters: { readonly [name: string]: Inserter };
   readonly belts: { readonly [name: string]: Belt };
@@ -50,6 +51,12 @@ export interface Recipe extends Entity {
   readonly effort: number;
   readonly ingredients: { [name: string]: number };
   readonly results: { [name: string]: number };
+}
+
+export interface Resource extends Entity {
+    readonly hardness: number;
+    readonly miningTime: number;
+    readonly requiredFluid?: { readonly [name: string]: number };
 }
 
 export interface Crafter extends Entity, Modular, Powered {
