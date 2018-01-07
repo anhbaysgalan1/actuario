@@ -24,6 +24,7 @@ const mapStateToProps = (state: ActuarioState) => {
 
     if (science.enabled) {
         const allScienceProduction = science.sciencePacks
+            .filter(crafters => crafters.size > 0)
             .map((crafters, recipeName) => calculateProductionDetails(recipeName, crafters, data))
             .valueSeq()
             .toArray();
