@@ -21,7 +21,7 @@ _item_descriptions = None
 _factorio_data = None
 
 # whether to actually send these to the database or just read them from disk
-_write_data, _write_icons = (True, True)
+_write_data, _write_icons = (True, False)
 
 firebase_cred = credentials.Certificate(config['firebase-key'])
 actuario_app = firebase_admin.initialize_app(firebase_cred, options={
@@ -444,6 +444,12 @@ def get_resources():
             'description': 'Crude Oil',
             'hardness': 1,
             'miningTime': 1
+        },
+        'water': {
+            'name': 'water',
+            'description': 'Water',
+            'hardness': 0,
+            'miningTime': 0
         }
     }
 
@@ -481,6 +487,7 @@ def upload_data(data):
     storage_filename = 'factorio-data/v{}.json.gz'.format(formatted_version)
 
     data_blob = Blob(storage_filename, storage.bucket(app=actuario_app))
+    data_blob.content_encoding = 'gzip'
 
     data_gz_bytes = gzip.compress(json.dumps(data).encode())
     with io.BytesIO(data_gz_bytes) as data_stream:
